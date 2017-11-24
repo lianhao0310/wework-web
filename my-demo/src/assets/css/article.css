@@ -1,0 +1,31 @@
+.article {
+  font-family: "PingFangSC-Regular";
+  font-size: 14px;
+  color: #9098B8;
+  letter-spacing: 0;
+
+  padding-left: 130px;
+  vertical-align: middle;
+  margin: 0 auto;
+  max-width: 70%;
+}
+
+.article_info .el-textarea {
+  width: 80%;
+}
+
+.article_info .el-button {
+  width: 100px;
+  margin-left: 25px;
+}
+
+.article_info .article_cover {
+  width: 80%;
+  display: inline-block;;
+}
+
+.article_info .article_cover img{
+  width: 60%;
+  float: left;
+
+}
