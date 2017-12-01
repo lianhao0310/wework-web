@@ -6,11 +6,13 @@ import router from "./router";
 import ElementUI from "element-ui";
 import axios from "axios";
 import store from "./vuex/store.js";
+import utils from "./assets/js/utils.js";
 import "element-ui/lib/theme-chalk/index.css";
 Vue.config.productionTip = false;
 Vue.use(ElementUI,{size: "small"});
 Vue.prototype.axios = axios;
-/* eslint-disable no-new */
+Vue.prototype.utils = utils;
+global.BASE_API = "http://localhost:18080";
 new Vue({
 	el: "#app",
 	router,

@@ -31,7 +31,23 @@ module.exports = {
     autoOpenBrowser: true,
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {},
+    proxyTable: {
+      '/mmbiz_png': {
+        target: 'https://mmbiz.qpic.cn/mmbiz_png', //设置调用接口域名和端口号别忘了加http
+        changeOrigin: true,
+        pathRewrite: {
+          '^/mmbiz_png': '/mmbiz_png' //这里理解成用‘/api’代替target里面的地址，组件中我们调接口时直接用api代替
+          // 比如我要调用'http://0.0:300/user/add'，直接写‘/api/user/add’即可
+        }
+      },
+      '/PictureLib': {
+        target: 'http://pimg.39.net//PictureLib',
+        changeOrigin: true,
+        pathRewrite: {
+          '^/PictureLib': '/PictureLib'
+        }
+      }
+    },
     // CSS Sourcemaps off by default because relative paths are "buggy"
     // with this option, according to the CSS-Loader README
     // (https://github.com/webpack/css-loader#sourcemaps)

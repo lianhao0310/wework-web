@@ -1,3 +1,4 @@
+<!--suppress ALL -->
 <template>
   <div class="article">
     <el-form :label-position="left" label-width="80px">
@@ -16,11 +17,13 @@
       <el-form :label-position="left" label-width="80px">
         <el-form-item v-if="articleInfo.digest" label="摘要">
           <el-input type="textarea" autosize id="digest" v-model="articleInfo.digest"></el-input>
-          <el-button  @click="copyInput('digest')">复制</el-button>
+          <el-button @click="copyInput('digest')">复制</el-button>
         </el-form-item>
         <el-form-item v-if="articleInfo.cover" label="封面">
-          <div class="article_cover"><img :src="articleInfo.cover"></div>
-          <el-button @click="saveCover">保存封面</el-button>
+          <div class="article_cover"><img :src="weixinImageApi+articleInfo.cover"></div>
+          <a :href="weixinImageApi+articleInfo.cover" download="cover">
+            <el-button>保存封面</el-button>
+          </a>
         </el-form-item>
         <el-form-item v-if="articleInfo.images" label="图片">
           <el-input type="textarea" autosize id="images" v-model="articleInfo.images"/>
@@ -44,6 +47,9 @@
   import ElButton from '../../node_modules/element-ui/packages/button/src/button.vue'
   import ElFormItem from '../../node_modules/element-ui/packages/form/src/form-item.vue'
   import ElInput from '../../node_modules/element-ui/packages/input/src/input.vue'
+  import axios from 'axios'
+  import JSZip from 'jszip'
+  import FileSaver from 'file-saver'
 
   export default {
     components: {
@@ -55,7 +61,8 @@
     data () {
       return {
         articleInfo: {},
-        linkUrl: this.$store.state.url
+        linkUrl: this.$store.state.url,
+        weixinImageApi: BASE_API + '/weixin/image?url=',
       }
     },
     methods: {
@@ -64,19 +71,41 @@
         input.select() // 选择对象
         document.execCommand('Copy') // 执行浏览器复制命令
       },
-      saveCover: function () {
-        this.axios({
-          method: 'get',
-          url: "http://pimg.39.net//PictureLib/A/f3/c4//org/13418114157068.jpg",
-          responseType: 'arraybuffer'
-        }).then(data => {
-          resolve(data.data)
-        }).catch(error => {
-          reject(error.toString())
-        })
-      },
-      saveImgs: function () {
 
+      saveImgs: function () {
+        const data = this.articleInfo.images// 需要下载打包的路径, 可以是本地相对路径, 也可以是跨域的全路径
+        const zip = new JSZip()
+        const cache = {}
+        const promises = []
+        data.forEach(item => {
+            const promise = getFile(this.weixinImageApi + item).then(data => { // 下载文件, 并存成ArrayBuffer对象
+              var imageFmt = 'jpg'
+              const strs = item.split('?')
+              const params = strs[1].split('&')
+              params.forEach(param => {
+                const format = param.split('=')
+                if (format[0] == 'wx_fmt') {
+                  imageFmt = format[1]
+                }
+              })
+              if (imageFmt != 'jpg' || imageFmt != 'png' || imageFmt != 'jpeg' || imageFmt != 'gif') {
+                imageFmt = 'jpg'
+              }
+              var randomNum = Math.random() * 700 + 800
+              randomNum = parseInt(randomNum, 10)
+              const file_name = randomNum + '.' + imageFmt // 获取文件名
+              zip.file(file_name, data, {binary: true}) // 逐个添加文件
+              cache[file_name] = data
+            })
+            promises.push(promise)
+          }
+        )
+
+        Promise.all(promises).then(() => {
+          zip.generateAsync({type: 'blob'}).then(content => { // 生成二进制流
+            FileSaver.saveAs(content, 'images.zip') // 利用file-saver保存文件
+          })
+        })
       },
       articleUrl: function () {
         this.axios({
@@ -84,7 +113,7 @@
           params: {
             url: this.linkUrl
           },
-          url: 'http://localhost:18080/weixin/article'
+          url: BASE_API + '/weixin/article'
         })
           .then((res) => {
             if (res.data.status) {
@@ -101,31 +130,20 @@
       }
     }
   }
-  function StartGETRequest(url, handler)
-  {
-    xmlhttp = null;
-    if (is_ie) {
-      var control = (is_ie5) ? "Microsoft.XMLHTTP" : "Msxml2.XMLHTTP";
-      try {
-        xmlhttp = new ActiveXObject(control);
-      } catch(e) {
-        alert("You need to enable active scripting and activeX controls");
-        DumpException(e);
-      }
-    } else {
-      xmlhttp = new XMLHttpRequest();
-    }
-    xmlhttp.onreadystatechange = function() {handler();}
-    if (url.indexOf("?") != -1){
-      var urltemp = url + "&rand=" + UniqueNum();
-    } else {
-      var urltemp = url + "?rand=" + UniqueNum();
-    }
-    //alert(urltemp);
-    xmlhttp.open('GET', urltemp, true);
-
-    xmlhttp.send(null);
+  const getFile = url => {
+    return new Promise((resolve, reject) => {
+      axios({
+        method: 'get',
+        url,
+        responseType: 'arraybuffer'
+      }).then(data => {
+        resolve(data.data)
+      }).catch(error => {
+        reject(error.toString())
+      })
+    })
   }
+
 </script>
 
 <style scoped>
