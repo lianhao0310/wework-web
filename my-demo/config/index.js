@@ -39,13 +39,6 @@ module.exports = {
           '^/mmbiz_png': '/mmbiz_png' //这里理解成用‘/api’代替target里面的地址，组件中我们调接口时直接用api代替
           // 比如我要调用'http://0.0:300/user/add'，直接写‘/api/user/add’即可
         }
-      },
-      '/PictureLib': {
-        target: 'http://pimg.39.net//PictureLib',
-        changeOrigin: true,
-        pathRewrite: {
-          '^/PictureLib': '/PictureLib'
-        }
       }
     },
     // CSS Sourcemaps off by default because relative paths are "buggy"

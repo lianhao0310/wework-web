@@ -26,12 +26,12 @@
           </a>
         </el-form-item>
         <el-form-item v-if="articleInfo.images" label="图片">
-          <el-input type="textarea" autosize id="images" v-model="articleInfo.images"/>
+          <el-input type="textarea" autosize id="images" v-model="articleInfo.images.join('\n')"/>
           <el-button @click="saveImgs">保存图片</el-button>
         </el-form-item>
-        <el-form-item v-if="articleInfo.videos" label="视频">
-          <el-input type="textarea" autosize id="videos" v-model="articleInfo.videos"/>
-          <el-button @click="copyInput('videos')">复制视频链接</el-button>
+        <el-form-item v-if="articleInfo.videos" v-for="(video,index) in articleInfo.videos" label="视频">
+          <el-input type="textarea" autosize v-bind:id="'video_'+index" v-model="articleInfo.videos[index]" />
+          <el-button @click="copyInput('video_'+index)">复制视频链接</el-button>
         </el-form-item>
         <el-form-item v-if="articleInfo.source" label="原文链接">
           <el-input type="textarea" autosize id="source" v-model="articleInfo.source"/>
@@ -80,20 +80,33 @@
         data.forEach(item => {
             const promise = getFile(this.weixinImageApi + item).then(data => { // 下载文件, 并存成ArrayBuffer对象
               var imageFmt = 'jpg'
-              const strs = item.split('?')
-              const params = strs[1].split('&')
-              params.forEach(param => {
-                const format = param.split('=')
-                if (format[0] == 'wx_fmt') {
-                  imageFmt = format[1]
+              var filename = Math.random() * 700 + 800
+              filename = parseInt(filename, 10)
+              const strs = item.toString().split('?')
+              if (item.toString().includes('wx_fmt') && strs.length > 0) {
+                const params = strs[1].split('&')
+                if (params.length > 0) {
+                  params.forEach(param => {
+                    const format = param.split('=')
+                    if (format[0] == 'wx_fmt') {
+                      imageFmt = format[1]
+                    }
+                  })
                 }
-              })
-              if (imageFmt != 'jpg' || imageFmt != 'png' || imageFmt != 'jpeg' || imageFmt != 'gif') {
+              } else {
+                const strs = item.toString().split('/')
+                if (strs[strs.length - 1].includes('.')) {
+                  const format = strs[strs.length - 1].split("\\.");
+                  imageFmt = format[1];
+                  filename = format[0];
+                }
+              }
+
+              if (imageFmt != 'jpg' && imageFmt != 'jpeg' && imageFmt != 'png' && imageFmt != 'gif') {
                 imageFmt = 'jpg'
               }
-              var randomNum = Math.random() * 700 + 800
-              randomNum = parseInt(randomNum, 10)
-              const file_name = randomNum + '.' + imageFmt // 获取文件名
+
+              const file_name = filename + '.' + imageFmt // 获取文件名
               zip.file(file_name, data, {binary: true}) // 逐个添加文件
               cache[file_name] = data
             })

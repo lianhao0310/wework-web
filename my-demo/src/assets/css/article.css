@@ -25,7 +25,7 @@
 }
 
 .article_info .article_cover img{
-  width: 60%;
+  /*width: 60%;*/
+  height: 300px;
   float: left;
-
 }
